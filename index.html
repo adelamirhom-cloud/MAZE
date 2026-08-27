@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Ultimate Cipher Quest | أنت براند</title>
+
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- Confetti Effects -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+
+    * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      background: #060813;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 12px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    .bg-glow-1 {
+      position: fixed;
+      width: 320px;
+      height: 320px;
+      background: radial-gradient(circle, rgba(0, 242, 254, 0.2), transparent 70%);
+      top: -60px;
+      left: -60px;
+      border-radius: 50%;
+      filter: blur(50px);
+      z-index: 0;
+      animation: pulseGlow 6s infinite alternate;
+    }
+    .bg-glow-2 {
+      position: fixed;
+      width: 360px;
+      height: 360px;
+      background: radial-gradient(circle, rgba(255, 0, 128, 0.2), transparent 70%);
+      bottom: -80px;
+      right: -80px;
+      border-radius: 50%;
+      filter: blur(60px);
+      z-index: 0;
+      animation: pulseGlow 7s infinite alternate-reverse;
+    }
+    @keyframes pulseGlow {
+      from { transform: scale(0.9); opacity: 0.6; }
+      to { transform: scale(1.15); opacity: 1; }
+    }
+
+    .quest-card {
+      background: rgba(14, 19, 36, 0.92);
+      backdrop-filter: blur(25px);
+      border: 2px solid rgba(0, 242, 254, 0.35);
+      border-radius: 22px;
+      padding: 22px 16px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 242, 254, 0.15);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    #teamSelectionScreen select {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid #00f2fe;
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 700;
+      outline: none;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+    #teamSelectionScreen select option {
+      background: #0e1324;
+      color: #fff;
+    }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 14px;
+      background: linear-gradient(135deg, #ff0844, #ffb199);
+      box-shadow: 0 0 12px rgba(255, 8, 68, 0.5);
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 900;
+    }
+    .team-badge {
+      background: rgba(0, 242, 254, 0.15);
+      border: 1px solid #00f2fe;
+      color: #00f2fe;
+      padding: 4px 12px;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .timer-container {
+      margin-bottom: 12px;
+    }
+    .timer-text {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #00f2fe;
+      text-shadow: 0 0 15px rgba(0, 242, 254, 0.7);
+      letter-spacing: 2px;
+      line-height: 1.2;
+    }
+    .timer-text.danger {
+      color: #ff0844;
+      text-shadow: 0 0 18px rgba(255, 8, 68, 0.9);
+      animation: shake 0.5s infinite alternate;
+    }
+    @keyframes shake {
+      from { transform: translateX(-2px); }
+      to { transform: translateX(2px); }
+    }
+    .progress-bar-bg {
+      width: 100%;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #00f2fe, #4facfe);
+      box-shadow: 0 0 10px #00f2fe;
+      transition: width 1s linear;
+    }
+
+    .envelope-stage {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      margin: 10px auto 16px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .envelope-cover {
+      position: absolute;
+      width: 250px;
+      height: 150px;
+      background: linear-gradient(135deg, #1f2742, #111628);
+      border: 1.5px solid rgba(0, 242, 254, 0.4);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 3;
+      transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
+      cursor: pointer;
+    }
+    .envelope-cover .seal-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #00f2fe, #4facfe);
+      color: #060813;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      font-weight: 900;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.8);
+      margin-bottom: 6px;
+    }
+    .envelope-cover .seal-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #00f2fe;
+    }
+
+    .letter-paper {
+      position: absolute;
+      width: 96%;
+      max-width: 370px;
+      background: #ffffff;
+      color: #0b101d;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      line-height: 1.5;
+      text-align: right;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.8), 0 0 15px rgba(0, 242, 254, 0.3);
+      border: 2px solid #00f2fe;
+      z-index: 2;
+      opacity: 0;
+      transform: scale(0.85) translateY(10px);
+      transition: transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
+      max-height: 215px;
+      overflow-y: auto;
+    }
+
+    .envelope-stage.open .envelope-cover {
+      transform: translateX(-140px) scale(0.65) rotate(-10deg);
+      opacity: 0.25;
+      pointer-events: none;
+    }
+    .envelope-stage.open .letter-paper {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      z-index: 4;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 242, 254, 0.35);
+      background: rgba(255, 255, 255, 0.06);
+      color: #fff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-align: center;
+      outline: none;
+      transition: all 0.3s;
+    }
+    input[type="text"]:focus {
+      border-color: #00f2fe;
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+    }
+    button {
+      width: 100%;
+      padding: 13px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+      color: #060813;
+      font-size: 1.1rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+      transition: transform 0.2s;
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+    .error-msg {
+      color: #ff0844;
+      font-size: 0.9rem;
+      margin-top: 8px;
+      display: none;
+      font-weight: 700;
+    }
+
+    .screen-overlay {
+      display: none;
+      animation: zoomIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    .winner-title {
+      color: #00f2fe;
+      font-size: 1.5rem;
+      font-weight: 900;
+      margin-bottom: 10px;
+      text-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
+    }
+    .gameover-title {
+      color: #ff0844;
+      font-size: 1.6rem;
+      font-weight: 900;
+      margin-bottom: 12px;
+      text-shadow: 0 0 15px rgba(255, 8, 68, 0.7);
+    }
+    .verse-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(0, 242, 254, 0.3);
+      padding: 14px;
+      border-radius: 14px;
+      line-height: 1.8;
+      font-size: 0.95rem;
+      margin: 12px 0;
+      color: #e0f7fa;
+    }
+    .lock-code-box {
+      background: linear-gradient(135deg, #ff0844, #ffb199);
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #fff;
+      display: inline-block;
+      margin-top: 8px;
+      box-shadow: 0 0 25px rgba(255, 8, 68, 0.7);
+      letter-spacing: 5px;
+      direction: ltr;
+    }
+    @keyframes zoomIn {
+      from { opacity: 0; transform: scale(0.8); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <div class="quest-card">
+    
+    <!-- 1. شاشة اختيار الفريق -->
+    <div id="teamSelectionScreen">
+      <h2 style="color: #00f2fe; font-size: 1.5rem; margin-bottom: 10px; font-weight: 900;">🔥 The Cipher Quest</h2>
+      <p style="color: #bbb; font-size: 0.9rem; margin-bottom: 20px;">اختر اسم فريقك (متاح دخول قائد واحد فقط لكل فريق):</p>
+      
+      <select id="teamSelect">
+        <option value="" disabled selected>-- اختر اسم الفريق --</option>
+        <option value="فريق السيدة العذراء">فريق السيدة العذراء</option>
+        <option value="فريق الملاك ميخائيل">فريق الملاك ميخائيل</option>
+        <option value="فريق القديس ابو سيفين">فريق القديس ابو سيفين</option>
+        <option value="فريق الانبا رويس">فريق الانبا رويس</option>
+      </select>
+      <button id="btnJoin" onclick="confirmTeam()">دخول التحدي ↵</button>
+      <div class="error-msg" id="teamLockError">⚠️ هذا الفريق محجوز ومسجل به شخص آخر بالفعل!</div>
+    </div>
+
+    <!-- 2. واجهة اللعبة الحية -->
+    <div id="gamePlayScreen" style="display: none;">
+      <div class="header-bar">
+        <div class="badge" id="stageBadge">🔥 البداية: كسر الختم</div>
+        <div class="team-badge" id="currentTeamDisplay">الفريق</div>
+      </div>
+      
+      <div class="timer-container">
+        <div class="timer-text" id="timer">05:00</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <div class="envelope-stage" id="envelopeStage">
+        <div class="envelope-cover">
+          <div class="seal-mark">✉</div>
+          <div class="seal-label">مظروف الشفرة السري</div>
+        </div>
+        <div class="letter-paper" id="letterContent">
+          اكتب كود البداية الخاص بفريقكم لفتح المظروف وتفعيل العداد الرسمي!
+        </div>
+      </div>
+
+      <div class="input-section">
+        <input type="text" id="passInput" placeholder="اكتب كلمة السر هنا..." autocomplete="off">
+        <button onclick="checkPass()">تأكيد الشفرة ↵</button>
+        <div class="error-msg" id="errorMsg">❌ الشفرة غير صحيحة، حاول مجدداً!</div>
+      </div>
+    </div>
+
+    <!-- 3. شاشة الفائز الأول -->
+    <div class="screen-overlay" id="victoryScreen">
+      <h2 class="winner-title">🏆 مبروك! أنتم الأبطال الفائزون</h2>
+      <p style="color: #f1c40f; font-weight: 700;">كنتم أول فريق يكسر الشفرة بنجاح!</p>
+      <div class="verse-card">
+        "وَلاَ تُشَاكِلُوا هذَا الدَّهْرَ، بَلْ تَغَيَّرُوا عَنْ شَكْلِكُمْ بِتَجْدِيدِ أَذْهَانِكُمْ، لِتَخْتَبِرُوا مَا هِيَ إِرَادَةُ اللهِ: الصَّالِحَةُ الْمَرْضِيَّةُ الْكَامِلَةُ"
+      </div>
+      <p style="color: #bbb; font-size: 0.9rem;">كود فتح قفل الصندوق السري (من اليسار لليمين):</p>
+      <div class="lock-code-box">0 9 2 2</div>
+    </div>
+
+    <!-- 4. شاشة انتهاء المسابقة للفرق الأخرى لحظياً -->
+    <div class="screen-overlay" id="gameOverScreen">
+      <h2 class="gameover-title">⏳ انتهت المسابقة!</h2>
+      <p id="winnerAnnouncementText" style="color: #00f2fe; font-size: 1.1rem; font-weight: 800; margin-bottom: 12px;"></p>
+      <div class="verse-card" style="border-color: rgba(255, 8, 68, 0.4);">
+        "عاش ليكم جداً على المجهود والتحدي الرائع! كل الفرق تعبت وكانت قريبة جداً من خط النهاية."
+      </div>
+      <p style="color: #aaa; font-size: 0.85rem;">توجهوا الآن مع باقي الفرق إلى المنصة الرئيسية 🎉</p>
+    </div>
+
+  </div>
+
+  <script>
+    // ==========================================
+    // ⚙️ إعدادات Firebase الخاصة بمشروع maze-d8572
+    // ==========================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCuaEafr-MAWy9U85XGN-tyNf-x5cn1JeM",
+      authDomain: "maze-d8572.firebaseapp.com",
+      databaseURL: "https://maze-d8572-default-rtdb.firebaseio.com",
+      projectId: "maze-d8572",
+      storageBucket: "maze-d8572.firebasestorage.app",
+      messagingSenderId: "133228040813",
+      appId: "1:133228040813:web:67eac572b15f952e99e564",
+      measurementId: "G-6CH1EHJV5G"
+    };
+
+    let db = null;
+    let gameEndedRef = null;
+    const myDeviceId = 'dev_' + Math.random().toString(36).substr(2, 9);
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      gameEndedRef = db.ref('cipher_quest_status');
+      
+      gameEndedRef.on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data && data.isFinished && !isMyTeamWinner) {
+          triggerGlobalGameOver(data.winnerTeam);
+        }
+      });
+    } catch(e) {
+      console.log("Firebase connection mode:", e);
+    }
+
+    // ==========================================
+    // 🔑 كلمات سر البداية المخصصة لكل فريق
+    // ==========================================
+    const teamStartPasscodes = {
+      "فريق السيدة العذراء": ["1212"],
+      "فريق الملاك ميخائيل": ["2019"],
+      "فريق القديس ابو سيفين": ["2222"],
+      "فريق الانبا رويس": ["7123"]
+    };
+
+    // ==========================================
+    // 📜 بيانات المراحل والألغاز الخمسة
+    // ==========================================
+    const stages = [
+      {
+        badge: "🔥 المرحلة 0: كسر ختم البداية",
+        letterText: "اكتب كود بدء المهمة الخاص بفريقكم لتفعيل العداد الرسمي والانطلاق في المغامرة!",
+        expected: []
+      },
+      {
+        badge: "📜 اللغز الأول: سر الخدام",
+        letterText: "📜 <b>الهينت الأول:</b><br>ابحثوا بين الخدام عن الخادم الذي يعرف إجابة هذا السؤال: <b>'من هو القاضي الذي نذر ابنته إذا انتصر في الحرب؟'</b><br>إذا جاوبكم الخادم بالاسم الصحيح، اطلبوا منه بطاقة كلمة السر التالية!",
+        expected: ["انا مسيحي", "أنا مسيحي", "انامسيحي"]
+      },
+      {
+        badge: "📖 اللغز الثاني: سر البامفلت",
+        letterText: "📜 <b>الهينت الثاني:</b><br>كلمة السر موجودة جوه البامفلت في إيدكم.. بس الشاطر اللي يعرف <b>لقب من ألقاب السيد المسيح</b> المذكورة هناك!",
+        expected: ["الفخاري الاعظم", "الفخاري الأعظم", "الفخارى الاعظم", "الفخارى الأعظم"]
+      },
+      {
+        badge: "🧮 اللغز الثالث: شفرة الأرقام المعقدة",
+        letterText: "📜 <b>الهينت الثالث:</b><br>استخرجوا المعطيات من الكتاب المقدس واحسبوا الناتج:<br>• <b>[A]</b> عدد مرات طواف يشوع حول أريحا في اليوم السابع.<br>• <b>[B]</b> عدد السمكات في معجزة إشباع الـ 5 آلاف رجل.<br>• <b>[C]</b> عدد أسفار الحكمة والشعر في العهد القديم.<br>• <b>[D]</b> عدد النفوس التي خلصت في فلك نوح.<br><br><b>المعادلة:</b> حاصل ضرب (A × D) مضافاً إليه حاصل ضرب (C × B × 10). كلمة السر هي الناتج النهائي!",
+        expected: ["156", "١٥٦"]
+      },
+      {
+        badge: "📸 اللغز الرابع: مهمة التصوير والبنبوني",
+        letterText: "📜 <b>الهينت الرابع:</b><br>المهمة: اتصوروا مع كل الخدام والكهنة! واللي هيديك بنبوني في جيبك من غير ما حد ياخد باله هو ده.. لو حد من الفريق التاني خد باله هتخسروا!<br>علشان تكسب لازم تتصور مع كل الخدام والكهنة، واللي هيديك البنبوني قوله: <b>'انا مميز بالمسيح'</b> وهيقولك كلمة السر اللي هتكتبها هنا!",
+        expected: ["انا براند مميز", "أنا براند مميز", "انابراند مميز", "انا براند مميزه", "أنا براند مميزة"]
+      },
+      {
+        badge: "👑 التحدي الختامي: السؤال الجوهري",
+        letterText: "📜 <b>السؤال الأخير:</b><br><br><span style='font-size: 1.2rem; font-weight: 900; color: #ff0844;'>إزاي أقدر أغير شكلي؟</span>",
+        expected: [
+          "رومية 12 : 2", "روميه 12 : 2", "رومية 12: 2", "روميه 12: 2",
+          "رومية 12:2", "روميه 12:2", "رومية 12 2", "روميه 12 2",
+          "12:2", "12 : 2", "1202", "رومية 12", "روميه 12"
+        ]
+      }
+    ];
+
+    let mySelectedTeam = "";
+    let isMyTeamWinner = false;
+    let currentStage = 0;
+    const TOTAL_SECONDS_PER_STAGE = 300;
+    let timeLeft = TOTAL_SECONDS_PER_STAGE;
+    let timerInterval = null;
+
+    function confirmTeam() {
+      const select = document.getElementById("teamSelect");
+      const teamLockError = document.getElementById("teamLockError");
+      teamLockError.style.display = "none";
+
+      if (!select.value) {
+        alert("برجاء اختيار الفريق أولاً!");
+        return;
+      }
+      
+      const selected = select.value;
+
+      if (db) {
+        const teamKey = encodeURIComponent(selected).replace(/\./g, '%2E');
+        const teamLockRef = db.ref('team_locks/' + teamKey);
+
+        teamLockRef.transaction((currentHolder) => {
+          if (currentHolder === null || currentHolder === myDeviceId) {
+            return myDeviceId;
+          } else {
+            return;
+          }
+        }, (error, committed, snapshot) => {
+          if (error || !committed) {
+            teamLockError.style.display = "block";
+          } else {
+            teamLockRef.onDisconnect().remove();
+            proceedToGame(selected);
+          }
+        });
+      } else {
+        proceedToGame(selected);
+      }
+    }
+
+    function proceedToGame(teamName) {
+      mySelectedTeam = teamName;
+      stages[0].expected = teamStartPasscodes[mySelectedTeam] || ["2026"];
+
+      document.getElementById("currentTeamDisplay").textContent = mySelectedTeam;
+      document.getElementById("teamSelectionScreen").style.display = "none";
+      document.getElementById("gamePlayScreen").style.display = "block";
+    }
+
+    function resetAndStartTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timeLeft = TOTAL_SECONDS_PER_STAGE;
+      updateTimerUI();
+
+      timerInterval = setInterval(() => {
+        timeLeft--;
+        updateTimerUI();
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          handleTimeExpired();
+        }
+      }, 1000);
+    }
+
+    function handleTimeExpired() {
+      alert("⏰ انتهت الـ 5 دقائق! عقوبة الوقت: تمت إعادتكم للمرحلة الأولى من البداية!");
+      currentStage = 0;
+      
+      const envelopeStage = document.getElementById("envelopeStage");
+      const errorMsg = document.getElementById("errorMsg");
+      const inputEl = document.getElementById("passInput");
+
+      envelopeStage.classList.remove("open");
+      errorMsg.style.display = "none";
+      inputEl.value = "";
+
+      document.getElementById("stageBadge").textContent = stages[0].badge;
+      document.getElementById("letterContent").innerHTML = stages[0].letterText;
+      
+      timeLeft = TOTAL_SECONDS_PER_STAGE;
+      updateTimerUI();
+    }
+
+    function updateTimerUI() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      const timerEl = document.getElementById("timer");
+      const progressBar = document.getElementById("progressBar");
+
+      timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      
+      const percentage = (timeLeft / TOTAL_SECONDS_PER_STAGE) * 100;
+      progressBar.style.width = `${percentage}%`;
+
+      if (timeLeft <= 60) {
+        timerEl.classList.add("danger");
+        progressBar.style.background = "linear-gradient(90deg, #ff0844, #ffb199)";
+        progressBar.style.boxShadow = "0 0 10px #ff0844";
+      } else {
+        timerEl.classList.remove("danger");
+        progressBar.style.background = "linear-gradient(90deg, #00f2fe, #4facfe)";
+        progressBar.style.boxShadow = "0 0 10px #00f2fe";
+      }
+    }
+
+    function checkPass() {
+      const inputEl = document.getElementById("passInput");
+      const inputVal = inputEl.value.trim().toLowerCase().replace(/\s+/g, ' ');
+      const currentExpected = stages[currentStage].expected.map(e => e.toLowerCase().replace(/\s+/g, ' '));
+      const errorMsg = document.getElementById("errorMsg");
+      const envelopeStage = document.getElementById("envelopeStage");
+      const letterContent = document.getElementById("letterContent");
+
+      if (currentExpected.includes(inputVal)) {
+        errorMsg.style.display = "none";
+        inputEl.value = "";
+
+        envelopeStage.classList.remove("open");
+        
+        setTimeout(() => {
+          currentStage++;
+          if (currentStage < stages.length) {
+            document.getElementById("stageBadge").textContent = stages[currentStage].badge;
+            letterContent.innerHTML = stages[currentStage].letterText;
+            
+            resetAndStartTimer();
+
+            setTimeout(() => {
+              envelopeStage.classList.add("open");
+            }, 300);
+
+          } else {
+            isMyTeamWinner = true;
+            clearInterval(timerInterval);
+
+            if (db && gameEndedRef) {
+              gameEndedRef.set({
+                isFinished: true,
+                winnerTeam: mySelectedTeam,
+                finishedAt: new Date().toISOString()
+              });
+            }
+
+            document.getElementById("gamePlayScreen").style.display = "none";
+            document.getElementById("victoryScreen").style.display = "block";
+            
+            confetti({ particleCount: 160, spread: 85, origin: { y: 0.6 } });
+          }
+        }, 400);
+
+      } else {
+        errorMsg.style.display = "block";
+      }
+    }
+
+    function triggerGlobalGameOver(winnerName) {
+      clearInterval(timerInterval);
+      document.getElementById("gamePlayScreen").style.display = "none";
+      document.getElementById("teamSelectionScreen").style.display = "none";
+      document.getElementById("winnerAnnouncementText").textContent = `🎉 الفائز الأول: ${winnerName || 'أحد الفرق'}`;
+      document.getElementById("gameOverScreen").style.display = "block";
+    }
+  </script>
+</body>
+</html>
