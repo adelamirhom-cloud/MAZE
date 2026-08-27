@@ -3,54 +3,95 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>لوحة تحكم الخدام | Admin Reset</title>
+  <title>لوحة تحكم الخدام | Admin Control Panel</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+    * { box-sizing: border-box; font-family: 'Cairo', sans-serif; margin: 0; padding: 0; }
     body {
       background: #060813;
       color: #fff;
-      font-family: sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      margin: 0;
       padding: 20px;
     }
     .card {
-      background: #121829;
-      border: 1px solid #00f2fe;
-      border-radius: 16px;
-      padding: 30px;
-      max-width: 400px;
+      background: rgba(18, 24, 41, 0.95);
+      border: 1.5px solid rgba(0, 242, 254, 0.35);
+      border-radius: 20px;
+      padding: 30px 24px;
+      max-width: 420px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(0, 242, 254, 0.15);
+    }
+    h2 { color: #00f2fe; margin-bottom: 12px; font-weight: 900; }
+    input[type="password"] {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 1.1rem;
+      text-align: center;
+      outline: none;
+      margin: 15px 0;
     }
     button {
       width: 100%;
-      padding: 15px;
+      padding: 14px;
       border: none;
-      border-radius: 10px;
-      background: #ff0844;
-      color: #fff;
-      font-size: 1.2rem;
-      font-weight: bold;
+      border-radius: 12px;
+      font-size: 1.1rem;
+      font-weight: 900;
       cursor: pointer;
-      margin-top: 20px;
-      box-shadow: 0 0 15px rgba(255, 8, 68, 0.5);
+      margin-top: 10px;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    button:hover { background: #d60036; }
-    .status { margin-top: 15px; font-weight: bold; }
+    button:active { transform: scale(0.97); }
+    .btn-login {
+      background: linear-gradient(135deg, #00f2fe, #4facfe);
+      color: #060813;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+    }
+    .btn-start {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+    }
+    .btn-reset {
+      background: linear-gradient(135deg, #ff0844, #c0392b);
+      color: #fff;
+      box-shadow: 0 0 20px rgba(255, 8, 68, 0.4);
+    }
+    .status { margin-top: 18px; font-weight: 700; font-size: 0.95rem; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
+
   <div class="card">
-    <h2>🎮 تحكم مسابقة الخلوة</h2>
-    <p style="color: #aaa; font-size: 0.9rem;">اضغط هنا لتصفير حالة الفوز وفك حجز جميع الفرق لبدء جولة جديدة فوراً.</p>
-    <button onclick="resetGame()">🔄 إعادة تشغيل المسابقة من الصفر</button>
-    <div class="status" id="statusText"></div>
+    <div id="loginSection">
+      <h2>🔐 دخول غرفة التحكم</h2>
+      <p style="color: #aaa; font-size: 0.88rem;">أدخل كلمة السر الخاصة بلجنة الخدام للمتابعة</p>
+      <input type="password" id="adminPass" placeholder="كلمة السر...">
+      <button class="btn-login" onclick="loginAdmin()">دخول ↵</button>
+      <div id="loginError" style="color: #ff0844; margin-top: 10px; display: none; font-weight: bold;">❌ كلمة السر غير صحيحة!</div>
+    </div>
+
+    <div id="controlSection" class="hidden">
+      <h2>🎮 إدارة المسابقة الحية</h2>
+      <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 15px;">التحكم في بدء جولة اللعبة وإعادة ضبط الفرق لحظياً</p>
+      
+      <button class="btn-start" onclick="startGame()">🚀 إطلاق صافرة البداية (بدء اللعبة للكل)</button>
+      <button class="btn-reset" onclick="resetGame()">🔄 تصفير المسابقة بالكامل (إيقاف وحذف)</button>
+
+      <div class="status" id="statusText"></div>
+    </div>
   </div>
 
   <script>
@@ -66,20 +107,45 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    function loginAdmin() {
+      const pass = document.getElementById("adminPass").value.trim();
+      if (pass === "avatege2019") {
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("controlSection").classList.remove("hidden");
+      } else {
+        document.getElementById("loginError").style.display = "block";
+      }
+    }
+
+    function startGame() {
+      const status = document.getElementById("statusText");
+      status.style.color = "#f1c40f";
+      status.textContent = "جاري إطلاق شارة البدء...";
+
+      db.ref('game_control/isStarted').set(true).then(() => {
+        status.style.color = "#2ecc71";
+        status.textContent = "✅ بدأت اللعبة الآن رسمياً لجميع الفرق على شاشاتهم!";
+      }).catch(err => {
+        status.style.color = "#ff0844";
+        status.textContent = "❌ خطأ: " + err.message;
+      });
+    }
+
     function resetGame() {
       const status = document.getElementById("statusText");
       status.style.color = "#f1c40f";
-      status.textContent = "جاري التصفير...";
+      status.textContent = "جاري تصفير المسابقة...";
 
       Promise.all([
         db.ref('cipher_quest_status').remove(),
-        db.ref('team_locks').remove()
+        db.ref('team_locks').remove(),
+        db.ref('game_control/isStarted').set(false)
       ]).then(() => {
         status.style.color = "#2ecc71";
-        status.textContent = "✅ تم تصفير المسابقة وفك حجز الفرق بنجاح!";
+        status.textContent = "✅ تم تصفير اللعبة وإعادتها لوضع الانتظار وحذف الفائزين!";
       }).catch(err => {
         status.style.color = "#ff0844";
-        status.textContent = "❌ حدث خطأ: " + err.message;
+        status.textContent = "❌ خطأ: " + err.message;
       });
     }
   </script>
