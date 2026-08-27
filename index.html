@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>The Ultimate Cipher Quest | أنت براند</title>
 
-  <!-- Firebase Compatibility SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <!-- Confetti Effects -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
   <style>
@@ -69,6 +67,31 @@
       text-align: center;
       position: relative;
       z-index: 1;
+    }
+
+    /* شاشة الانتظار الشيك */
+    .waiting-box {
+      padding: 20px 10px;
+      animation: fadeIn 0.8s ease-in-out;
+    }
+    .pulse-radar {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 20px auto;
+      border-radius: 50%;
+      background: rgba(0, 242, 254, 0.1);
+      border: 2px solid #00f2fe;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.5);
+      animation: radarPulse 2s infinite ease-out;
+    }
+    @keyframes radarPulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 242, 254, 0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 25px rgba(0, 242, 254, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 242, 254, 0); }
     }
 
     #teamSelectionScreen select {
@@ -160,7 +183,6 @@
       justify-content: center;
       align-items: center;
     }
-
     .envelope-cover {
       position: absolute;
       width: 250px;
@@ -196,7 +218,6 @@
       font-weight: 700;
       color: #00f2fe;
     }
-
     .letter-paper {
       position: absolute;
       width: 96%;
@@ -261,9 +282,7 @@
       box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
       transition: transform 0.2s;
     }
-    button:active {
-      transform: scale(0.97);
-    }
+    button:active { transform: scale(0.97); }
     .error-msg {
       color: #ff0844;
       font-size: 0.9rem;
@@ -317,6 +336,10 @@
       from { opacity: 0; transform: scale(0.8); }
       to { opacity: 1; transform: scale(1); }
     }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
   </style>
 </head>
 <body>
@@ -326,10 +349,19 @@
 
   <div class="quest-card">
     
-    <!-- 1. شاشة اختيار الفريق -->
-    <div id="teamSelectionScreen">
+    <div class="waiting-box" id="waitingScreen">
+      <div class="pulse-radar">⏳</div>
+      <h2 style="color: #00f2fe; font-size: 1.45rem; font-weight: 900; margin-bottom: 8px;">استعدوا للمغامرة!</h2>
+      <p style="color: #f1c40f; font-size: 0.95rem; font-weight: 700; margin-bottom: 12px;">المسابقة لم تبدأ بعد 🚀</p>
+      <div class="verse-card">
+        "انتظروا شارة البداية من الخدام.. جهزوا روح التحدي وتركيز الفريق بالكامل!"
+      </div>
+      <p style="color: #777; font-size: 0.8rem;">ستفتح الشاشة تلقائياً للجميع فور إطلاق التحدي ⚡</p>
+    </div>
+
+    <div id="teamSelectionScreen" style="display: none;">
       <h2 style="color: #00f2fe; font-size: 1.5rem; margin-bottom: 10px; font-weight: 900;">🔥 The Cipher Quest</h2>
-      <p style="color: #bbb; font-size: 0.9rem; margin-bottom: 20px;">اختر اسم فريقك (متاح دخول قائد واحد فقط لكل فريق):</p>
+      <p style="color: #bbb; font-size: 0.9rem; margin-bottom: 20px;">اختر اسم فريقك (متاح قائد واحد لكل فريق):</p>
       
       <select id="teamSelect">
         <option value="" disabled selected>-- اختر اسم الفريق --</option>
@@ -342,7 +374,6 @@
       <div class="error-msg" id="teamLockError">⚠️ هذا الفريق محجوز ومسجل به شخص آخر بالفعل!</div>
     </div>
 
-    <!-- 2. واجهة اللعبة الحية -->
     <div id="gamePlayScreen" style="display: none;">
       <div class="header-bar">
         <div class="badge" id="stageBadge">🔥 البداية: كسر الختم</div>
@@ -373,7 +404,6 @@
       </div>
     </div>
 
-    <!-- 3. شاشة الفائز الأول -->
     <div class="screen-overlay" id="victoryScreen">
       <h2 class="winner-title">🏆 مبروك! أنتم الأبطال الفائزون</h2>
       <p style="color: #f1c40f; font-weight: 700;">كنتم أول فريق يكسر الشفرة بنجاح!</p>
@@ -384,7 +414,6 @@
       <div class="lock-code-box">0 9 2 2</div>
     </div>
 
-    <!-- 4. شاشة انتهاء المسابقة للفرق الأخرى لحظياً -->
     <div class="screen-overlay" id="gameOverScreen">
       <h2 class="gameover-title">⏳ انتهت المسابقة!</h2>
       <p id="winnerAnnouncementText" style="color: #00f2fe; font-size: 1.1rem; font-weight: 800; margin-bottom: 12px;"></p>
@@ -397,254 +426,9 @@
   </div>
 
   <script>
-    // ==========================================
-    // ⚙️ إعدادات Firebase الخاصة بمشروع maze-d8572
-    // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyCuaEafr-MAWy9U85XGN-tyNf-x5cn1JeM",
       authDomain: "maze-d8572.firebaseapp.com",
       databaseURL: "https://maze-d8572-default-rtdb.firebaseio.com",
       projectId: "maze-d8572",
-      storageBucket: "maze-d8572.firebasestorage.app",
-      messagingSenderId: "133228040813",
-      appId: "1:133228040813:web:67eac572b15f952e99e564",
-      measurementId: "G-6CH1EHJV5G"
-    };
-
-    let db = null;
-    let gameEndedRef = null;
-    const myDeviceId = 'dev_' + Math.random().toString(36).substr(2, 9);
-
-    try {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.database();
-      gameEndedRef = db.ref('cipher_quest_status');
-      
-      gameEndedRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data && data.isFinished && !isMyTeamWinner) {
-          triggerGlobalGameOver(data.winnerTeam);
-        }
-      });
-    } catch(e) {
-      console.log("Firebase connection mode:", e);
-    }
-
-    // ==========================================
-    // 🔑 كلمات سر البداية المخصصة لكل فريق
-    // ==========================================
-    const teamStartPasscodes = {
-      "فريق السيدة العذراء": ["1212"],
-      "فريق الملاك ميخائيل": ["2019"],
-      "فريق القديس ابو سيفين": ["2222"],
-      "فريق الانبا رويس": ["7123"]
-    };
-
-    // ==========================================
-    // 📜 بيانات المراحل والألغاز الخمسة
-    // ==========================================
-    const stages = [
-      {
-        badge: "🔥 المرحلة 0: كسر ختم البداية",
-        letterText: "اكتب كود بدء المهمة الخاص بفريقكم لتفعيل العداد الرسمي والانطلاق في المغامرة!",
-        expected: []
-      },
-      {
-        badge: "📜 اللغز الأول: سر الخدام",
-        letterText: "📜 <b>الهينت الأول:</b><br>ابحثوا بين الخدام عن الخادم الذي يعرف إجابة هذا السؤال: <b>'من هو القاضي الذي نذر ابنته إذا انتصر في الحرب؟'</b><br>إذا جاوبكم الخادم بالاسم الصحيح، اطلبوا منه بطاقة كلمة السر التالية!",
-        expected: ["انا مسيحي", "أنا مسيحي", "انامسيحي"]
-      },
-      {
-        badge: "📖 اللغز الثاني: سر البامفلت",
-        letterText: "📜 <b>الهينت الثاني:</b><br>كلمة السر موجودة جوه البامفلت في إيدكم.. بس الشاطر اللي يعرف <b>لقب من ألقاب السيد المسيح</b> المذكورة هناك!",
-        expected: ["الفخاري الاعظم", "الفخاري الأعظم", "الفخارى الاعظم", "الفخارى الأعظم"]
-      },
-      {
-        badge: "🧮 اللغز الثالث: شفرة الأرقام المعقدة",
-        letterText: "📜 <b>الهينت الثالث:</b><br>استخرجوا المعطيات من الكتاب المقدس واحسبوا الناتج:<br>• <b>[A]</b> عدد مرات طواف يشوع حول أريحا في اليوم السابع.<br>• <b>[B]</b> عدد السمكات في معجزة إشباع الـ 5 آلاف رجل.<br>• <b>[C]</b> عدد أسفار الحكمة والشعر في العهد القديم.<br>• <b>[D]</b> عدد النفوس التي خلصت في فلك نوح.<br><br><b>المعادلة:</b> حاصل ضرب (A × D) مضافاً إليه حاصل ضرب (C × B × 10). كلمة السر هي الناتج النهائي!",
-        expected: ["156", "١٥٦"]
-      },
-      {
-        badge: "📸 اللغز الرابع: مهمة التصوير والبنبوني",
-        letterText: "📜 <b>الهينت الرابع:</b><br>المهمة: اتصوروا مع كل الخدام والكهنة! واللي هيديك بنبوني في جيبك من غير ما حد ياخد باله هو ده.. لو حد من الفريق التاني خد باله هتخسروا!<br>علشان تكسب لازم تتصور مع كل الخدام والكهنة، واللي هيديك البنبوني قوله: <b>'انا مميز بالمسيح'</b> وهيقولك كلمة السر اللي هتكتبها هنا!",
-        expected: ["انا براند مميز", "أنا براند مميز", "انابراند مميز", "انا براند مميزه", "أنا براند مميزة"]
-      },
-      {
-        badge: "👑 التحدي الختامي: السؤال الجوهري",
-        letterText: "📜 <b>السؤال الأخير:</b><br><br><span style='font-size: 1.2rem; font-weight: 900; color: #ff0844;'>إزاي أقدر أغير شكلي؟</span>",
-        expected: [
-          "رومية 12 : 2", "روميه 12 : 2", "رومية 12: 2", "روميه 12: 2",
-          "رومية 12:2", "روميه 12:2", "رومية 12 2", "روميه 12 2",
-          "12:2", "12 : 2", "1202", "رومية 12", "روميه 12"
-        ]
-      }
-    ];
-
-    let mySelectedTeam = "";
-    let isMyTeamWinner = false;
-    let currentStage = 0;
-    const TOTAL_SECONDS_PER_STAGE = 300;
-    let timeLeft = TOTAL_SECONDS_PER_STAGE;
-    let timerInterval = null;
-
-    function confirmTeam() {
-      const select = document.getElementById("teamSelect");
-      const teamLockError = document.getElementById("teamLockError");
-      teamLockError.style.display = "none";
-
-      if (!select.value) {
-        alert("برجاء اختيار الفريق أولاً!");
-        return;
-      }
-      
-      const selected = select.value;
-
-      if (db) {
-        const teamKey = encodeURIComponent(selected).replace(/\./g, '%2E');
-        const teamLockRef = db.ref('team_locks/' + teamKey);
-
-        teamLockRef.transaction((currentHolder) => {
-          if (currentHolder === null || currentHolder === myDeviceId) {
-            return myDeviceId;
-          } else {
-            return;
-          }
-        }, (error, committed, snapshot) => {
-          if (error || !committed) {
-            teamLockError.style.display = "block";
-          } else {
-            teamLockRef.onDisconnect().remove();
-            proceedToGame(selected);
-          }
-        });
-      } else {
-        proceedToGame(selected);
-      }
-    }
-
-    function proceedToGame(teamName) {
-      mySelectedTeam = teamName;
-      stages[0].expected = teamStartPasscodes[mySelectedTeam] || ["2026"];
-
-      document.getElementById("currentTeamDisplay").textContent = mySelectedTeam;
-      document.getElementById("teamSelectionScreen").style.display = "none";
-      document.getElementById("gamePlayScreen").style.display = "block";
-    }
-
-    function resetAndStartTimer() {
-      if (timerInterval) clearInterval(timerInterval);
-      timeLeft = TOTAL_SECONDS_PER_STAGE;
-      updateTimerUI();
-
-      timerInterval = setInterval(() => {
-        timeLeft--;
-        updateTimerUI();
-
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          handleTimeExpired();
-        }
-      }, 1000);
-    }
-
-    function handleTimeExpired() {
-      alert("⏰ انتهت الـ 5 دقائق! عقوبة الوقت: تمت إعادتكم للمرحلة الأولى من البداية!");
-      currentStage = 0;
-      
-      const envelopeStage = document.getElementById("envelopeStage");
-      const errorMsg = document.getElementById("errorMsg");
-      const inputEl = document.getElementById("passInput");
-
-      envelopeStage.classList.remove("open");
-      errorMsg.style.display = "none";
-      inputEl.value = "";
-
-      document.getElementById("stageBadge").textContent = stages[0].badge;
-      document.getElementById("letterContent").innerHTML = stages[0].letterText;
-      
-      timeLeft = TOTAL_SECONDS_PER_STAGE;
-      updateTimerUI();
-    }
-
-    function updateTimerUI() {
-      const minutes = Math.floor(timeLeft / 60);
-      const seconds = timeLeft % 60;
-      const timerEl = document.getElementById("timer");
-      const progressBar = document.getElementById("progressBar");
-
-      timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      
-      const percentage = (timeLeft / TOTAL_SECONDS_PER_STAGE) * 100;
-      progressBar.style.width = `${percentage}%`;
-
-      if (timeLeft <= 60) {
-        timerEl.classList.add("danger");
-        progressBar.style.background = "linear-gradient(90deg, #ff0844, #ffb199)";
-        progressBar.style.boxShadow = "0 0 10px #ff0844";
-      } else {
-        timerEl.classList.remove("danger");
-        progressBar.style.background = "linear-gradient(90deg, #00f2fe, #4facfe)";
-        progressBar.style.boxShadow = "0 0 10px #00f2fe";
-      }
-    }
-
-    function checkPass() {
-      const inputEl = document.getElementById("passInput");
-      const inputVal = inputEl.value.trim().toLowerCase().replace(/\s+/g, ' ');
-      const currentExpected = stages[currentStage].expected.map(e => e.toLowerCase().replace(/\s+/g, ' '));
-      const errorMsg = document.getElementById("errorMsg");
-      const envelopeStage = document.getElementById("envelopeStage");
-      const letterContent = document.getElementById("letterContent");
-
-      if (currentExpected.includes(inputVal)) {
-        errorMsg.style.display = "none";
-        inputEl.value = "";
-
-        envelopeStage.classList.remove("open");
-        
-        setTimeout(() => {
-          currentStage++;
-          if (currentStage < stages.length) {
-            document.getElementById("stageBadge").textContent = stages[currentStage].badge;
-            letterContent.innerHTML = stages[currentStage].letterText;
-            
-            resetAndStartTimer();
-
-            setTimeout(() => {
-              envelopeStage.classList.add("open");
-            }, 300);
-
-          } else {
-            isMyTeamWinner = true;
-            clearInterval(timerInterval);
-
-            if (db && gameEndedRef) {
-              gameEndedRef.set({
-                isFinished: true,
-                winnerTeam: mySelectedTeam,
-                finishedAt: new Date().toISOString()
-              });
-            }
-
-            document.getElementById("gamePlayScreen").style.display = "none";
-            document.getElementById("victoryScreen").style.display = "block";
-            
-            confetti({ particleCount: 160, spread: 85, origin: { y: 0.6 } });
-          }
-        }, 400);
-
-      } else {
-        errorMsg.style.display = "block";
-      }
-    }
-
-    function triggerGlobalGameOver(winnerName) {
-      clearInterval(timerInterval);
-      document.getElementById("gamePlayScreen").style.display = "none";
-      document.getElementById("teamSelectionScreen").style.display = "none";
-      document.getElementById("winnerAnnouncementText").textContent = `🎉 الفائز الأول: ${winnerName || 'أحد الفرق'}`;
-      document.getElementById("gameOverScreen").style.display = "block";
-    }
-  </script>
-</body>
-</html>
+      storageBucket: "maze-d8572.
