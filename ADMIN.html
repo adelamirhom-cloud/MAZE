@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة تحكم الخدام | Admin Reset</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    body {
+      background: #060813;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      background: #121829;
+      border: 1px solid #00f2fe;
+      border-radius: 16px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.2);
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #ff0844;
+      color: #fff;
+      font-size: 1.2rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+      box-shadow: 0 0 15px rgba(255, 8, 68, 0.5);
+    }
+    button:hover { background: #d60036; }
+    .status { margin-top: 15px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>🎮 تحكم مسابقة الخلوة</h2>
+    <p style="color: #aaa; font-size: 0.9rem;">اضغط هنا لتصفير حالة الفوز وفك حجز جميع الفرق لبدء جولة جديدة فوراً.</p>
+    <button onclick="resetGame()">🔄 إعادة تشغيل المسابقة من الصفر</button>
+    <div class="status" id="statusText"></div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCuaEafr-MAWy9U85XGN-tyNf-x5cn1JeM",
+      authDomain: "maze-d8572.firebaseapp.com",
+      databaseURL: "https://maze-d8572-default-rtdb.firebaseio.com",
+      projectId: "maze-d8572",
+      storageBucket: "maze-d8572.firebasestorage.app",
+      messagingSenderId: "133228040813",
+      appId: "1:133228040813:web:67eac572b15f952e99e564"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    function resetGame() {
+      const status = document.getElementById("statusText");
+      status.style.color = "#f1c40f";
+      status.textContent = "جاري التصفير...";
+
+      Promise.all([
+        db.ref('cipher_quest_status').remove(),
+        db.ref('team_locks').remove()
+      ]).then(() => {
+        status.style.color = "#2ecc71";
+        status.textContent = "✅ تم تصفير المسابقة وفك حجز الفرق بنجاح!";
+      }).catch(err => {
+        status.style.color = "#ff0844";
+        status.textContent = "❌ حدث خطأ: " + err.message;
+      });
+    }
+  </script>
+</body>
+</html>
